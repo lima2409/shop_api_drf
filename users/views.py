@@ -57,6 +57,7 @@ class RegistrationAPIView(CreateAPIView):
             user = CustomUser.objects.create_user(
                 email=email,
                 password=password,
+                phone_number=serializer.validated_data.get('phone_number', ''),
                 is_active=False
             )
 
