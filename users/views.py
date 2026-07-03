@@ -6,6 +6,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 from rest_framework.generics import CreateAPIView
+from rest_framework_simplejwt.views import TokenObtainPairView
+from .serializers import CustomTokenObtainPairSerializer
 
 from .serializers import (
     RegisterValidateSerializer,
@@ -103,3 +105,6 @@ class ConfirmUserAPIView(CreateAPIView):
                 'key': token.key
             }
         )
+    
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer

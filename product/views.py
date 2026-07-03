@@ -8,6 +8,10 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.views import APIView
 from .permissions import IsModerator
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, SAFE_METHODS
+from rest_framework import viewsets
+from common.validators import validate_age_for_product
+from .models import Product
+from .serializers import ProductSerializer
 
 from .models import Category, Product, Review
 from .serializers import (
@@ -160,3 +164,11 @@ class ProductWithReviewsAPIView(APIView):
 
         serializer = ProductWithReviewsSerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
+    
+class ProductViewSet(viewsets.ModelViewSet):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+
+    def perform_create(self, serializer):
+        validate_age_for_product(self.request)
+        serializer.save(owner=self.request.user)
