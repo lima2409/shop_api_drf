@@ -1,25 +1,29 @@
-__pycache__/
-*.py[cod]
-*$py.class
-
-__pypackages__/
-
-celerybeat.pid
-celerybeat-schedule.db
-
-.env
-.venv
-env/
+# Virtual environment
 venv/
+env/
+.venv/
 
-.ruff_cache/
-.pypirc
+# Environment variables (секреты!)
+.env
 
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Database
 db.sqlite3
-.idea
 
-# Игнорировать все файлы в папке migrations
-**/migrations/*
-# Но не игнорировать __init__.py
-!**/migrations/__init__.py
+# Django
+*.log
+media/
+
+# IDE
+.vscode/
+.idea/
 .DS_Store
+
+# Celery
+celerybeat-schedule
+celerybeat.pid

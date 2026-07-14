@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from .models import Category, Product, Review
+from .models import Category, Product, Review, Order
 from common.validators import validate_age_for_product
+from product.tasks import process_new_product
 
 class CategorySerializer(serializers.ModelSerializer):
     products_count = serializers.SerializerMethodField()
@@ -74,3 +75,14 @@ class ReviewValidateSerializer(serializers.Serializer):
             return Product.objects.get(id=product_id)
         except Product.DoesNotExist:
             raise ValidationError('Product does not exist')
+        
+
+def perform_create(self, serializer):
+    product = serializer.save()
+    process_new_product.delay(product.id)
+
+class OrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = ['id', 'user', 'product', 'status', 'created_at']
+        read_only_fields = ['user', 'status', 'created_at']

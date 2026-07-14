@@ -12,8 +12,9 @@ from rest_framework import viewsets
 from common.validators import validate_age_for_product
 from .models import Product
 from .serializers import ProductSerializer
+from product.tasks import send_order_confirmation_email, process_new_product
 
-from .models import Category, Product, Review
+from .models import Category, Product, Review, Order
 from .serializers import (
     CategorySerializer,
     ProductSerializer,
@@ -21,7 +22,8 @@ from .serializers import (
     ProductWithReviewsSerializer,
     CategoryValidateSerializer,
     ProductValidateSerializer,
-    ReviewValidateSerializer
+    ReviewValidateSerializer,
+    OrderSerializer
 )
 
 PAGE_SIZE = 5
@@ -127,13 +129,9 @@ class ReviewViewSet(ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = ReviewValidateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        # Get validated data
         text = serializer.validated_data.get('text')
         stars = serializer.validated_data.get('stars')
         product = serializer.validated_data.get('product')
-
-        # Create review
         review = Review.objects.create(
             text=text,
             stars=stars,
@@ -171,4 +169,13 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         validate_age_for_product(self.request)
-        serializer.save(owner=self.request.user)
+        product = serializer.save(owner=self.request.user)
+        process_new_product.delay(product.id)
+
+class OrderViewSet(viewsets.ModelViewSet):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+
+    def perform_create(self, serializer):
+        order = serializer.save(user=self.request.user)
+        send_order_confirmation_email.delay(self.request.user.email, order.id)

@@ -11,9 +11,12 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 import os
 from pathlib import Path
+import dotenv
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+dotenv.read_dotenv(str(BASE_DIR / '.env'))
+
+from celery.schedules import crontab
 
 
 # Quick-start development settings - unsuitable for production
@@ -43,6 +46,7 @@ INSTALLED_APPS = [
     'users',
     'rest_framework.authtoken',
     'drf_yasg',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -169,3 +173,28 @@ GOOGLE_REDIRECT_URI = os.environ.get('GOOGLE_REDIRECT_URI')
 REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
 REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
 REDIS_DB = int(os.environ.get('REDIS_DB', 0))
+
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_TIMEZONE = 'Asia/Bishkek'
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+CELERY_BEAT_SCHEDULE = {
+    'delete-inactive-users-every-night': {
+        'task': 'users.tasks.delete_inactive_users',
+        'schedule': crontab(hour=3, minute=0),
+    },
+    'delete-old-cancelled-orders': {
+        'task': 'product.tasks.delete_old_cancelled_orders',
+        'schedule': crontab(hour=4, minute=0),
+    },
+}
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 's98213782@gmail.com'
+EMAIL_HOST_PASSWORD = 'sai010101'
+DEFAULT_FROM_EMAIL = 's98213782@gmail.com' 
